@@ -29,11 +29,12 @@ class Pelanggan extends Model
         return $this->belongsTo(User::class);
     }
 
-    // Relasi ke Tagihan
-   public function tagihan()
-{
-    return $this->belongsTo(Tagihan::class);
-}
+    // Relasi ke Tagihan - PERBAIKAN: hasMany dan nama plural
+    public function tagihans()
+    {
+        return $this->hasMany(Tagihan::class);
+    }
+    
     // Scope untuk pelanggan aktif
     public function scopeAktif($query)
     {
