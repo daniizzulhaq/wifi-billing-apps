@@ -24,31 +24,32 @@ class PembayaranController extends Controller
     }
 
     // Ubah parameter dari $tagihan_id menjadi Tagihan $tagihan (model binding)
-    public function create(Tagihan $tagihan)
-    {
-        // Pastikan tagihan milik pelanggan yang login
-        if ($tagihan->pelanggan_id !== Auth::user()->pelanggan->id) {
-            abort(403, 'Unauthorized action.');
-        }
+    public function create($id)
+{
+    // Ambil tagihan milik pelanggan yang login
+    $tagihan = Tagihan::where('id', $id)
+        ->where('pelanggan_id', Auth::user()->pelanggan->id)
+        ->firstOrFail();
 
-        // Cek apakah tagihan sudah lunas
-        if ($tagihan->status === 'lunas') {
-            return redirect()->route('pelanggan.tagihan.index')
-                ->with('warning', 'Tagihan ini sudah lunas.');
-        }
-
-        // Cek apakah sudah ada pembayaran pending untuk tagihan ini
-        $pembayaranPending = Pembayaran::where('tagihan_id', $tagihan->id)
-            ->where('status_approval', 'pending')
-            ->first();
-
-        if ($pembayaranPending) {
-            return redirect()->route('pelanggan.pembayaran.index')
-                ->with('warning', 'Anda sudah mengajukan pembayaran untuk tagihan ini. Menunggu verifikasi admin.');
-        }
-
-        return view('pelanggan.pembayaran.create', compact('tagihan'));
+    // Cek apakah tagihan sudah lunas
+    if ($tagihan->status === 'lunas') {
+        return redirect()->route('pelanggan.tagihan.index')
+            ->with('warning', 'Tagihan ini sudah lunas.');
     }
+
+    // Cek apakah sudah ada pembayaran pending untuk tagihan ini
+    $pembayaranPending = Pembayaran::where('tagihan_id', $tagihan->id)
+        ->where('status_approval', 'pending')
+        ->first();
+
+    if ($pembayaranPending) {
+        return redirect()->route('pelanggan.pembayaran.index')
+            ->with('warning', 'Anda sudah mengajukan pembayaran untuk tagihan ini. Menunggu verifikasi admin.');
+    }
+
+    return view('pelanggan.pembayaran.create', compact('tagihan'));
+}
+
 
     // Ubah parameter dari Request $request menjadi Request $request, Tagihan $tagihan
     public function store(Request $request, Tagihan $tagihan)
@@ -111,4 +112,6 @@ class PembayaranController extends Controller
         $pembayaran->load('tagihan');
         return view('pelanggan.pembayaran.show', compact('pembayaran'));
     }
+
+    
 }
