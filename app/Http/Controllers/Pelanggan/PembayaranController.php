@@ -23,38 +23,36 @@ class PembayaranController extends Controller
         return view('pelanggan.pembayaran.index', compact('pembayarans'));
     }
 
-    // Ubah parameter dari $tagihan_id menjadi Tagihan $tagihan (model binding)
-    public function create($id)
-{
-    // Ambil tagihan milik pelanggan yang login
-    $tagihan = Tagihan::where('id', $id)
-        ->where('pelanggan_id', Auth::user()->pelanggan->id)
-        ->firstOrFail();
+    // Pakai Route Model Binding: {tagihan}
+    public function create(Tagihan $tagihan)
+    {
+        // Cek tagihan milik pelanggan login
+        if ((int)$tagihan->pelanggan_id !== (int)Auth::user()->pelanggan->id) {
+            abort(403, 'Unauthorized action.');
+        }
 
-    // Cek apakah tagihan sudah lunas
-    if ($tagihan->status === 'lunas') {
-        return redirect()->route('pelanggan.tagihan.index')
-            ->with('warning', 'Tagihan ini sudah lunas.');
+        // Cek status tagihan
+        if ($tagihan->status === 'lunas') {
+            return redirect()->route('pelanggan.tagihan.index')
+                ->with('warning', 'Tagihan ini sudah lunas.');
+        }
+
+        // Cek pembayaran pending
+        $pembayaranPending = Pembayaran::where('tagihan_id', $tagihan->id)
+            ->where('status_approval', 'pending')
+            ->first();
+
+        if ($pembayaranPending) {
+            return redirect()->route('pelanggan.pembayaran.index')
+                ->with('warning', 'Anda sudah mengajukan pembayaran untuk tagihan ini. Menunggu verifikasi admin.');
+        }
+
+        return view('pelanggan.pembayaran.create', compact('tagihan'));
     }
 
-    // Cek apakah sudah ada pembayaran pending untuk tagihan ini
-    $pembayaranPending = Pembayaran::where('tagihan_id', $tagihan->id)
-        ->where('status_approval', 'pending')
-        ->first();
-
-    if ($pembayaranPending) {
-        return redirect()->route('pelanggan.pembayaran.index')
-            ->with('warning', 'Anda sudah mengajukan pembayaran untuk tagihan ini. Menunggu verifikasi admin.');
-    }
-
-    return view('pelanggan.pembayaran.create', compact('tagihan'));
-}
-
-
-    // Ubah parameter dari Request $request menjadi Request $request, Tagihan $tagihan
     public function store(Request $request, Tagihan $tagihan)
     {
-        // Pastikan tagihan milik pelanggan yang login
+        // Cek kepemilikan
         if ($tagihan->pelanggan_id !== Auth::user()->pelanggan->id) {
             abort(403, 'Unauthorized action.');
         }
@@ -64,27 +62,21 @@ class PembayaranController extends Controller
             'tanggal_bayar' => 'required|date',
             'bukti_transfer' => 'required|image|mimes:jpeg,png,jpg|max:2048',
             'keterangan' => 'nullable|string|max:500',
-        ], [
-            'bukti_transfer.required' => 'Bukti transfer wajib diupload',
-            'bukti_transfer.image' => 'File harus berupa gambar',
-            'bukti_transfer.max' => 'Ukuran file maksimal 2MB',
         ]);
 
-        // Cek status tagihan
+        // Jika tagihan lunas
         if ($tagihan->status === 'lunas') {
             return redirect()->route('pelanggan.tagihan.index')
                 ->with('error', 'Tagihan ini sudah lunas.');
         }
 
         // Upload bukti transfer
-        $buktiPath = null;
-        if ($request->hasFile('bukti_transfer')) {
-            $file = $request->file('bukti_transfer');
-            $filename = 'bukti_transfer_' . time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
-            $buktiPath = $file->storeAs('bukti_transfer', $filename, 'public');
-        }
+        $buktiPath = $request->file('bukti_transfer')->store(
+            'bukti_transfer',
+            'public'
+        );
 
-        // Hitung total yang harus dibayar
+        // Hitung total bayar
         $jumlah = $tagihan->jumlah_tagihan + $tagihan->denda;
 
         // Buat pembayaran
@@ -99,12 +91,12 @@ class PembayaranController extends Controller
         ]);
 
         return redirect()->route('pelanggan.pembayaran.index')
-            ->with('success', 'Pembayaran berhasil diajukan. Menunggu verifikasi dari admin.');
+            ->with('success', 'Pembayaran berhasil diajukan. Menunggu verifikasi admin.');
     }
 
     public function show(Pembayaran $pembayaran)
     {
-        // Pastikan pembayaran milik pelanggan yang login
+        // Cek kepemilikan pembayaran
         if ($pembayaran->tagihan->pelanggan_id !== Auth::user()->pelanggan->id) {
             abort(403);
         }
@@ -112,6 +104,4 @@ class PembayaranController extends Controller
         $pembayaran->load('tagihan');
         return view('pelanggan.pembayaran.show', compact('pembayaran'));
     }
-
-    
 }

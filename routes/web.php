@@ -71,15 +71,29 @@ Route::middleware(['auth', 'role:pelanggan'])
     ->group(function () {
 
         // Dashboard
-        Route::get('/dashboard', [PelangganDashboard::class, 'index'])->name('dashboard');
+        Route::get('/dashboard', [PelangganDashboard::class, 'index'])
+            ->name('dashboard');
 
-        // Tagihan
-        Route::get('/tagihan', [PelangganTagihanController::class, 'index'])->name('tagihan.index');
-        Route::get('/tagihan/{tagihan}', [PelangganTagihanController::class, 'show'])->name('tagihan.show');
+        // TAGIHAN
+        Route::get('/tagihan', [PelangganTagihanController::class, 'index'])
+            ->name('tagihan.index');
 
-        // Pembayaran
-        Route::get('/pembayaran', [PelangganPembayaranController::class, 'index'])->name('pembayaran.index'); // daftar pembayaran
-        Route::get('/pembayaran/{tagihan}/create', [PelangganPembayaranController::class, 'create'])->name('pembayaran.create'); // form bayar
-        Route::post('/pembayaran/{tagihan}', [PelangganPembayaranController::class, 'store'])->name('pembayaran.store'); // proses simpan pembayaran
-        Route::get('/pembayaran/{pembayaran}', [PelangganPembayaranController::class, 'show'])->name('pembayaran.show'); // detail pembayaran
+        Route::get('/tagihan/{tagihan}', [PelangganTagihanController::class, 'show'])
+            ->name('tagihan.show');
+
+        // PEMBAYARAN
+        Route::get('/pembayaran', [PelangganPembayaranController::class, 'index'])
+            ->name('pembayaran.index');
+
+        // Form create bayar → harus di atas route show, dan pakai {tagihan}
+        Route::get('/pembayaran/{tagihan}/create', [PelangganPembayaranController::class, 'create'])
+            ->name('pembayaran.create');
+
+        // Simpan pembayaran → pakai {tagihan} juga
+        Route::post('/pembayaran/{tagihan}', [PelangganPembayaranController::class, 'store'])
+            ->name('pembayaran.store');
+
+        // Detail pembayaran → pakai {pembayaran}
+        Route::get('/pembayaran/detail/{pembayaran}', [PelangganPembayaranController::class, 'show'])
+            ->name('pembayaran.show');
     });
