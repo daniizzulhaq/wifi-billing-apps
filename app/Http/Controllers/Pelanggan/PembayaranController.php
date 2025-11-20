@@ -7,7 +7,6 @@ use App\Models\Pembayaran;
 use App\Models\Tagihan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 
 class PembayaranController extends Controller
 {
@@ -23,65 +22,59 @@ class PembayaranController extends Controller
         return view('pelanggan.pembayaran.index', compact('pembayarans'));
     }
 
-    // Pakai Route Model Binding: {tagihan}
-  public function create(Tagihan $tagihan)
-{
-    $userPelangganId = Auth::user()->pelanggan->id ?? null;
+    public function create(Tagihan $tagihan)
+    {
+        $userPelangganId = Auth::user()->pelanggan->id ?? null;
 
-    // Jika tidak cocok -> redirect, jangan abort
-    if ($tagihan->pelanggan_id != $userPelangganId) {
-        return redirect()->route('pelanggan.tagihan.index')
-            ->with('error', 'Anda tidak boleh mengakses tagihan ini.');
+        if (!$userPelangganId || $tagihan->pelanggan_id != $userPelangganId) {
+            return redirect()->route('pelanggan.tagihan.index')
+                ->with('error', 'Anda tidak boleh mengakses tagihan ini.');
+        }
+
+        if ($tagihan->status === 'lunas') {
+            return redirect()->route('pelanggan.tagihan.index')
+                ->with('warning', 'Tagihan ini sudah lunas.');
+        }
+
+        $pending = Pembayaran::where('tagihan_id', $tagihan->id)
+            ->where('status_approval', 'pending')
+            ->first();
+
+        if ($pending) {
+            return redirect()->route('pelanggan.pembayaran.index')
+                ->with('warning', 'Anda sudah mengajukan pembayaran untuk tagihan ini.');
+        }
+
+        return view('pelanggan.pembayaran.create', compact('tagihan'));
     }
-
-    if ($tagihan->status === 'lunas') {
-        return redirect()->route('pelanggan.tagihan.index')
-            ->with('warning', 'Tagihan ini sudah lunas.');
-    }
-
-    $pembayaranPending = Pembayaran::where('tagihan_id', $tagihan->id)
-        ->where('status_approval', 'pending')
-        ->first();
-
-    if ($pembayaranPending) {
-        return redirect()->route('pelanggan.pembayaran.index')
-            ->with('warning', 'Anda sudah mengajukan pembayaran untuk tagihan ini.');
-    }
-
-    return view('pelanggan.pembayaran.create', compact('tagihan'));
-}
-
 
     public function store(Request $request, Tagihan $tagihan)
     {
-        // Cek kepemilikan
-        if ($tagihan->pelanggan_id !== Auth::user()->pelanggan->id) {
-            abort(403, 'Unauthorized action.');
+        $userPelangganId = Auth::user()->pelanggan->id ?? null;
+
+        if (!$userPelangganId || $tagihan->pelanggan_id != $userPelangganId) {
+            return redirect()->route('pelanggan.tagihan.index')
+                ->with('error', 'Anda tidak boleh mengakses tagihan ini.');
         }
 
-        // Validasi
         $validated = $request->validate([
             'tanggal_bayar' => 'required|date',
             'bukti_transfer' => 'required|image|mimes:jpeg,png,jpg|max:2048',
             'keterangan' => 'nullable|string|max:500',
         ]);
 
-        // Jika tagihan lunas
         if ($tagihan->status === 'lunas') {
             return redirect()->route('pelanggan.tagihan.index')
                 ->with('error', 'Tagihan ini sudah lunas.');
         }
 
-        // Upload bukti transfer
         $buktiPath = $request->file('bukti_transfer')->store(
             'bukti_transfer',
             'public'
         );
 
-        // Hitung total bayar
         $jumlah = $tagihan->jumlah_tagihan + $tagihan->denda;
 
-        // Buat pembayaran
         Pembayaran::create([
             'tagihan_id' => $tagihan->id,
             'tanggal_bayar' => $validated['tanggal_bayar'],
@@ -89,7 +82,7 @@ class PembayaranController extends Controller
             'metode_pembayaran' => 'transfer',
             'bukti_transfer' => $buktiPath,
             'keterangan' => $validated['keterangan'] ?? null,
-            'status' => 'pending',
+            'status_approval' => 'pending',
         ]);
 
         return redirect()->route('pelanggan.pembayaran.index')
@@ -98,9 +91,11 @@ class PembayaranController extends Controller
 
     public function show(Pembayaran $pembayaran)
     {
-        // Cek kepemilikan pembayaran
-        if ($pembayaran->tagihan->pelanggan_id !== Auth::user()->pelanggan->id) {
-            abort(403);
+        $userPelangganId = Auth::user()->pelanggan->id ?? null;
+
+        if (!$userPelangganId || $pembayaran->tagihan->pelanggan_id != $userPelangganId) {
+            return redirect()->route('pelanggan.pembayaran.index')
+                ->with('error', 'Anda tidak boleh melihat pembayaran ini.');
         }
 
         $pembayaran->load('tagihan');
