@@ -24,31 +24,33 @@ class PembayaranController extends Controller
     }
 
     // Pakai Route Model Binding: {tagihan}
-    public function create(Tagihan $tagihan)
-    {
-        // Cek tagihan milik pelanggan login
-        if ((int)$tagihan->pelanggan_id !== (int)Auth::user()->pelanggan->id) {
-            abort(403, 'Unauthorized action.');
-        }
+  public function create(Tagihan $tagihan)
+{
+    $userPelangganId = Auth::user()->pelanggan->id ?? null;
 
-        // Cek status tagihan
-        if ($tagihan->status === 'lunas') {
-            return redirect()->route('pelanggan.tagihan.index')
-                ->with('warning', 'Tagihan ini sudah lunas.');
-        }
-
-        // Cek pembayaran pending
-        $pembayaranPending = Pembayaran::where('tagihan_id', $tagihan->id)
-            ->where('status_approval', 'pending')
-            ->first();
-
-        if ($pembayaranPending) {
-            return redirect()->route('pelanggan.pembayaran.index')
-                ->with('warning', 'Anda sudah mengajukan pembayaran untuk tagihan ini. Menunggu verifikasi admin.');
-        }
-
-        return view('pelanggan.pembayaran.create', compact('tagihan'));
+    // Jika tidak cocok -> redirect, jangan abort
+    if ($tagihan->pelanggan_id != $userPelangganId) {
+        return redirect()->route('pelanggan.tagihan.index')
+            ->with('error', 'Anda tidak boleh mengakses tagihan ini.');
     }
+
+    if ($tagihan->status === 'lunas') {
+        return redirect()->route('pelanggan.tagihan.index')
+            ->with('warning', 'Tagihan ini sudah lunas.');
+    }
+
+    $pembayaranPending = Pembayaran::where('tagihan_id', $tagihan->id)
+        ->where('status_approval', 'pending')
+        ->first();
+
+    if ($pembayaranPending) {
+        return redirect()->route('pelanggan.pembayaran.index')
+            ->with('warning', 'Anda sudah mengajukan pembayaran untuk tagihan ini.');
+    }
+
+    return view('pelanggan.pembayaran.create', compact('tagihan'));
+}
+
 
     public function store(Request $request, Tagihan $tagihan)
     {
