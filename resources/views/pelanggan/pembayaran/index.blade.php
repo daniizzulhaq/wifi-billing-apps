@@ -34,7 +34,7 @@
                                 <td>{{ $pembayarans->firstItem() + $loop->index }}</td>
                                 <td>{{ \Carbon\Carbon::parse($pembayaran->tanggal_bayar)->format('d M Y') }}</td>
                                 <td>
-                                    <strong>{{ \Carbon\Carbon::parse($pembayaran->tagihan->bulan_tagihan)->format('F Y') }}</strong>
+                                    <strong>{{ \Carbon\Carbon::parse($pembayaran->tagihan->bulan)->format('F Y') }}</strong>
                                 </td>
                                 <td>Rp {{ number_format($pembayaran->jumlah, 0, ',', '.') }}</td>
                                 <td>
@@ -78,4 +78,4 @@
         </div>
     </div>
 </div>
-@endsection 
+@endsection
