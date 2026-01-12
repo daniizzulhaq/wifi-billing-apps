@@ -182,8 +182,9 @@
             <hr>
             <p class="mb-2"><strong>Rekening Tujuan Transfer:</strong></p>
             <ul class="mb-0">
-                <li><strong>Bank BCA:</strong> 1234567890 a.n PT WiFi Indonesia</li>
-                <li><strong>Bank Mandiri:</strong> 0987654321 a.n PT WiFi Indonesia</li>
+                <li><strong>Bank BCA:</strong> 8930536084 a.n Zikri Rizkian</li>
+                <li><strong>Bank BRI:</strong> 3768 01022083532 a.n Zikri Rizkian</li>
+                <li><strong>E-wallet DANA:</strong> 082242350529 a.n Zikri Rizkian</li>
             </ul>
             <hr>
             <p class="mb-0 text-muted small">

@@ -45,7 +45,9 @@
                     <select name="paket_wifi" required
                             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
                         <option value="">Pilih Paket</option>
+                        <option value="10 Mbps" {{ old('paket_wifi') == '5 Mbps' ? 'selected' : '' }}>5 Mbps</option>
                         <option value="10 Mbps" {{ old('paket_wifi') == '10 Mbps' ? 'selected' : '' }}>10 Mbps</option>
+                         <option value="10 Mbps" {{ old('paket_wifi') == '15 Mbps' ? 'selected' : '' }}>15 Mbps</option>
                         <option value="20 Mbps" {{ old('paket_wifi') == '20 Mbps' ? 'selected' : '' }}>20 Mbps</option>
                         <option value="50 Mbps" {{ old('paket_wifi') == '50 Mbps' ? 'selected' : '' }}>50 Mbps</option>
                         <option value="100 Mbps" {{ old('paket_wifi') == '100 Mbps' ? 'selected' : '' }}>100 Mbps</option>

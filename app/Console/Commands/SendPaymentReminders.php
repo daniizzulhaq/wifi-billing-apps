@@ -52,9 +52,19 @@ class SendPaymentReminders extends Command
                     if ($result['success']) {
                         $totalSent++;
                         $this->info("✓ Sent to {$tagihan->pelanggan->nama} ({$tagihan->pelanggan->no_hp})");
+                        
+                        // Tampilkan response dari API
+                        if (isset($result['data'])) {
+                            $this->line("  Response: " . json_encode($result['data']));
+                        }
                     } else {
                         $totalFailed++;
                         $this->error("✗ Failed to {$tagihan->pelanggan->nama}: {$result['message']}");
+                        
+                        // Tampilkan detail error
+                        if (isset($result['data'])) {
+                            $this->line("  Error Detail: " . json_encode($result['data']));
+                        }
                     }
 
                 } catch (\Exception $e) {

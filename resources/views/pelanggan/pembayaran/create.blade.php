@@ -134,14 +134,20 @@
                 <div class="card-body">
                     <div class="mb-3">
                         <strong>Bank BCA</strong><br>
-                        <span class="h5 text-primary">1234567890</span><br>
-                        <small class="text-muted">a.n PT WiFi Indonesia</small>
+                        <span class="h5 text-primary">8930536084</span><br>
+                        <small class="text-muted">a.n PT Zikri Rizkian</small>
                     </div>
                     <hr>
                     <div class="mb-0">
-                        <strong>Bank Mandiri</strong><br>
-                        <span class="h5 text-primary">0987654321</span><br>
-                        <small class="text-muted">a.n PT WiFi Indonesia</small>
+                        <strong>Bank BRI</strong><br>
+                        <span class="h5 text-primary">3768 01022083532</span><br>
+                        <small class="text-muted">a.n Zikri Rizkian</small>
+                    </div>
+                    <hr>
+                    <div class="mb-0">
+                        <strong>E-wallet DANA</strong><br>
+                        <span class="h5 text-primary">082242350529</span><br>
+                        <small class="text-muted">a.n Zikri Rizkian</small>
                     </div>
                 </div>
             </div>

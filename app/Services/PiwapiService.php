@@ -9,14 +9,14 @@ use Carbon\Carbon;
 class PiwapiService
 {
     protected $apiUrl;
-    protected $apiKey;
-    protected $senderId;
+    protected $apiSecret;
+    protected $account;
 
     public function __construct()
     {
         $this->apiUrl = config('piwapi.api_url');
-        $this->apiKey = config('piwapi.api_key');
-        $this->senderId = config('piwapi.sender_id');
+        $this->apiSecret = config('piwapi.api_secret');
+        $this->account = config('piwapi.account');
     }
 
     /**
@@ -80,15 +80,18 @@ Halo *{$pelanggan->nama}*,
 {$pesan}
 
 📋 *Detail Tagihan:*
-• Periode: {$bulan}
-• Paket: {$pelanggan->paket_wifi}
-• Nominal: Rp {$totalTagihan}
-• Jatuh Tempo: {$jatuhTempo}
+- Periode: {$bulan}
+- Paket: {$pelanggan->paket_wifi}
+- Nominal: Rp {$totalTagihan}
+- Jatuh Tempo: {$jatuhTempo}
 
 {$urgency}
 
 💳 *Cara Pembayaran:*
-Login ke dashboard pelanggan Anda atau hubungi admin untuk informasi pembayaran.
+Login ke dashboard pelanggan Anda atau hubungi admin untuk informasi pembayaran atau transfer
+- Transfer Bank BRI: An. Zikri Rizkian, No. Rekening: 3768 01022083532
+- Transfer Bank BCA: An. Zikri Rizkian, No. Rekening: 8930536084
+- E-wallet DANA: An. Zikri Rizkian, No. Rekening: 082242350529
 
 Terima kasih atas perhatian Anda! 🙏
 
@@ -97,49 +100,80 @@ MESSAGE;
     }
 
     /**
-     * Kirim pesan via Piwapi API
+     * Kirim pesan via Piwapi API (WhatsApp)
      */
     protected function sendMessage($phoneNumber, $message)
     {
         try {
-            $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $this->apiKey,
-                'Content-Type' => 'application/json',
-            ])->timeout(30)->post($this->apiUrl . '/messages/send', [
-                'sender_id' => $this->senderId,
+            $url = $this->apiUrl . '/send/whatsapp';
+            
+            // Build payload - HANYA field yang diperlukan
+            $payload = [
+                'secret' => $this->apiSecret,
                 'recipient' => $phoneNumber,
-                'message' => $message,
-                'type' => 'text'
+                'type' => 'text',
+                'message' => $message
+            ];
+            
+            // Tambahkan account HANYA jika ada dan tidak kosong
+            if (!empty($this->account)) {
+                $payload['account'] = $this->account;
+            }
+
+            Log::info("Sending WhatsApp message via Piwapi", [
+                'url' => $url,
+                'payload' => array_merge($payload, ['message' => substr($message, 0, 100) . '...']), // Log partial message
+                'phone' => $phoneNumber
             ]);
 
-            if ($response->successful()) {
+            // Gunakan asForm() untuk application/x-www-form-urlencoded
+            $response = Http::asForm()
+                ->timeout(30)
+                ->post($url, $payload);
+
+            $statusCode = $response->status();
+            $responseData = $response->json();
+            
+            Log::info("Piwapi API Response", [
+                'status_code' => $statusCode,
+                'response' => $responseData
+            ]);
+
+            // Cek status code dan response
+            if ($statusCode === 200 && isset($responseData['status']) && $responseData['status'] === 200) {
                 Log::info("WhatsApp notification sent successfully", [
                     'phone' => $phoneNumber,
-                    'response' => $response->json()
+                    'response' => $responseData
                 ]);
                 
                 return [
                     'success' => true,
                     'message' => 'Notifikasi berhasil dikirim',
-                    'data' => $response->json()
+                    'data' => $responseData
                 ];
             }
 
+            // Handle error responses
+            $errorMessage = $responseData['message'] ?? 'Unknown error';
+            
             Log::error("Failed to send WhatsApp notification", [
                 'phone' => $phoneNumber,
-                'status' => $response->status(),
-                'body' => $response->body()
+                'status_code' => $statusCode,
+                'error_message' => $errorMessage,
+                'full_response' => $responseData
             ]);
             
             return [
                 'success' => false,
-                'message' => 'Gagal mengirim notifikasi: ' . $response->body()
+                'message' => 'Gagal mengirim notifikasi: ' . $errorMessage,
+                'data' => $responseData
             ];
 
         } catch (\Exception $e) {
             Log::error("Exception sending WhatsApp notification", [
                 'phone' => $phoneNumber,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
             
             return [
@@ -155,15 +189,13 @@ MESSAGE;
     public function testConnection()
     {
         try {
-            $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $this->apiKey,
-            ])->get($this->apiUrl . '/status');
-
-            return [
-                'success' => $response->successful(),
-                'message' => $response->successful() ? 'Koneksi berhasil' : 'Koneksi gagal',
-                'data' => $response->json()
-            ];
+            $testPhone = '6281392246785'; // Ganti dengan nomor test Anda
+            $testMessage = 'Test connection dari WiFi Billing System';
+            
+            $result = $this->sendMessage($testPhone, $testMessage);
+            
+            return $result;
+            
         } catch (\Exception $e) {
             return [
                 'success' => false,
