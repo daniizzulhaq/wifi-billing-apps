@@ -11,6 +11,8 @@ use App\Http\Controllers\Admin\LaporanController;
 use App\Http\Controllers\Pelanggan\DashboardController as PelangganDashboard;
 use App\Http\Controllers\Pelanggan\TagihanController as PelangganTagihanController;
 use App\Http\Controllers\Pelanggan\PembayaranController as PelangganPembayaranController;
+use App\Services\PiwapiService;
+use App\Models\Tagihan;
 
 // ======================================
 // REDIRECT ROOT KE LOGIN
@@ -97,3 +99,14 @@ Route::middleware(['auth', 'role:pelanggan'])
         Route::get('/pembayaran/detail/{pembayaran}', [PelangganPembayaranController::class, 'show'])
             ->name('pembayaran.show');
     });
+
+    Route::get('/test-piwapi', function(PiwapiService $piwapi) {
+    $result = $piwapi->testConnection();
+    return response()->json($result);
+});
+
+Route::get('/test-send-wa/{tagihan_id}', function($tagihan_id, PiwapiService $piwapi) {
+    $tagihan = Tagihan::with('pelanggan')->findOrFail($tagihan_id);
+    $result = $piwapi->sendReminderJatuhTempo($tagihan->pelanggan, $tagihan, 3);
+    return response()->json($result);
+});

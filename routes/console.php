@@ -1,8 +1,13 @@
 <?php
 
-use Illuminate\Foundation\Inspiring;
-use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Schedule;
 
-Artisan::command('inspire', function () {
-    $this->comment(Inspiring::quote());
-})->purpose('Display an inspiring quote');
+// Schedule untuk kirim reminder pembayaran
+// Kirim jam 7 pagi
+Schedule::command('tagihan:send-reminders')->dailyAt('07:00');
+
+// Kirim 2x sehari (pagi & sore)
+Schedule::command('tagihan:send-reminders')->twiceDaily(8, 16);
+
+// Kirim setiap jam
+Schedule::command('tagihan:send-reminders')->hourly();
