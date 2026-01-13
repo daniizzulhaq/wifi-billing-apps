@@ -11,6 +11,7 @@ return [
     'reminder_days' => [
         7, // H-7 (seminggu sebelum)
         3, // H-3
+        2,
         1, // H-1
         0, // H-0
     ],
