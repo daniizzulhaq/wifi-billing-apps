@@ -49,6 +49,8 @@
                         <option value="10 Mbps" {{ old('paket_wifi') == '10 Mbps' ? 'selected' : '' }}>10 Mbps</option>
                          <option value="10 Mbps" {{ old('paket_wifi') == '15 Mbps' ? 'selected' : '' }}>15 Mbps</option>
                         <option value="20 Mbps" {{ old('paket_wifi') == '20 Mbps' ? 'selected' : '' }}>20 Mbps</option>
+                          <option value="20 Mbps" {{ old('paket_wifi') == '30 Mbps' ? 'selected' : '' }}>30 Mbps</option>
+                            <option value="20 Mbps" {{ old('paket_wifi') == '40 Mbps' ? 'selected' : '' }}>40 Mbps</option>
                         <option value="50 Mbps" {{ old('paket_wifi') == '50 Mbps' ? 'selected' : '' }}>50 Mbps</option>
                         <option value="100 Mbps" {{ old('paket_wifi') == '100 Mbps' ? 'selected' : '' }}>100 Mbps</option>
                     </select>
