@@ -54,11 +54,6 @@
                 </button>
             </div>
         </form>
-
-        <div class="text-center text-xs text-gray-500 mt-4">
-            <p>Demo Login:</p>
-            <p>Admin: admin@wifi.com / admin123</p>
-        </div>
     </div>
 </div>
 @endsection
