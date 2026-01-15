@@ -94,6 +94,7 @@ Halo *{$pelanggan->nama}*,
 {$urgency}
 
 👤 *Informasi Login Dashboard:*
+link login https://wifi-bumdes.my.id/login
 - Username: {$email}
 - Password: 123456
 
