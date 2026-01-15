@@ -54,25 +54,31 @@ class PiwapiService
     /**
      * Buat pesan notifikasi jatuh tempo
      */
-    protected function createReminderMessage($pelanggan, $tagihan, $daysBefore)
-    {
-        $bulan = Carbon::parse($tagihan->bulan)->format('F Y');
-        $jatuhTempo = Carbon::parse($tagihan->jatuh_tempo)->format('d F Y');
-        $totalTagihan = number_format($tagihan->jumlah_tagihan + $tagihan->denda, 0, ',', '.');
-        
-        // Tentukan urgency berdasarkan sisa hari
-        if ($daysBefore == 0) {
-            $urgency = '🚨 *HARI INI JATUH TEMPO!*';
-            $pesan = 'Tagihan WiFi Anda jatuh tempo *HARI INI*. Mohon segera lakukan pembayaran untuk menghindari denda keterlambatan.';
-        } elseif ($daysBefore == 1) {
-            $urgency = '⏰ *BESOK JATUH TEMPO!*';
-            $pesan = 'Tagihan WiFi Anda akan jatuh tempo *BESOK*. Segera lakukan pembayaran sebelum terkena denda.';
-        } else {
-            $urgency = "📅 *{$daysBefore} HARI LAGI*";
-            $pesan = "Tagihan WiFi Anda akan jatuh tempo dalam *{$daysBefore} hari*. Harap segera melakukan pembayaran.";
-        }
+   /**
+ * Buat pesan notifikasi jatuh tempo
+ */
+protected function createReminderMessage($pelanggan, $tagihan, $daysBefore)
+{
+    $bulan = Carbon::parse($tagihan->bulan)->format('F Y');
+    $jatuhTempo = Carbon::parse($tagihan->jatuh_tempo)->format('d F Y');
+    $totalTagihan = number_format($tagihan->jumlah_tagihan + $tagihan->denda, 0, ',', '.');
+    
+    // Ambil email user sebagai username
+    $email = $pelanggan->user->email ?? '-';
+    
+    // Tentukan urgency berdasarkan sisa hari
+    if ($daysBefore == 0) {
+        $urgency = '🚨 *HARI INI JATUH TEMPO!*';
+        $pesan = 'Tagihan WiFi Anda jatuh tempo *HARI INI*. Mohon segera lakukan pembayaran untuk menghindari denda keterlambatan.';
+    } elseif ($daysBefore == 1) {
+        $urgency = '⏰ *BESOK JATUH TEMPO!*';
+        $pesan = 'Tagihan WiFi Anda akan jatuh tempo *BESOK*. Segera lakukan pembayaran sebelum terkena denda.';
+    } else {
+        $urgency = "📅 *{$daysBefore} HARI LAGI*";
+        $pesan = "Tagihan WiFi Anda akan jatuh tempo dalam *{$daysBefore} hari*. Harap segera melakukan pembayaran.";
+    }
 
-        return <<<MESSAGE
+    return <<<MESSAGE
 🔔 *PENGINGAT PEMBAYARAN TAGIHAN*
 
 Halo *{$pelanggan->nama}*,
@@ -87,6 +93,10 @@ Halo *{$pelanggan->nama}*,
 
 {$urgency}
 
+👤 *Informasi Login Dashboard:*
+- Username: {$email}
+- Password: 123456
+
 💳 *Cara Pembayaran:*
 Login ke dashboard pelanggan Anda atau hubungi admin untuk informasi pembayaran atau transfer
 - Transfer Bank BRI: An. Zikri Rizkian, No. Rekening: 3768 01022083532
@@ -97,7 +107,7 @@ Terima kasih atas perhatian Anda! 🙏
 
 _Pesan otomatis dari sistem_
 MESSAGE;
-    }
+}
 
     /**
      * Kirim pesan via Piwapi API (WhatsApp)
